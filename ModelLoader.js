@@ -73,6 +73,35 @@ export class ModelLoader {
 
     }
 
+    loadModel() {
+        for ( let i = 0; i < modelFiles.length; i++ ) {
+
+            this.model_data.push({'model_name':modelFiles[i]});
+            let model = modelFiles[i];
+            // console.log(model);
+            var scope = this;
+            this.loader.load(model, function (object) {
+                let temp;
+                temp = object;
+                temp.position.y = -10;
+                temp.name = 'mmdModel';
+                scope.meshes.push(temp);
+                // console.log('model', scope.mesh);
+                
+                // scope.scene.add(scope.mesh);
+                if (i == 0) {
+                    scope.mesh = object;
+                    scope.scene.add(scope.mesh);
+                }
+    
+            }, this.onProgress, null);
+
+        }
+
+        
+
+    }
+
     loadVpd() {
         
         const vpdFile = vpdFiles[this.vpdIndex];
@@ -81,7 +110,7 @@ export class ModelLoader {
         this.loader.loadVPD(vpdFile, false, function (vpd) {
 
             scope.vpds.push(vpd);
-
+            console.log(vpd);
             scope.vpdIndex++;
 
             if (scope.vpdIndex < vpdFiles.length) {
@@ -97,35 +126,7 @@ export class ModelLoader {
         }, this.onProgress, null);
 
     }
-
-    loadModel() {
-        for ( let i = 0; i < modelFiles.length; i++ ) {
-
-            this.model_data.push({'model_name':modelFiles[i]});
-            let model = modelFiles[i];
-            // console.log(model);
-            var scope = this;
-            this.loader.load(model, function (object) {
     
-                scope.mesh = object;
-                scope.mesh.position.y = -10;
-                scope.mesh.name = 'mmdModel';
-                scope.meshes.push(scope.mesh);
-                // console.log('model', scope.mesh);
-                
-                // scope.scene.add(scope.mesh);
-                if (i == 0) {
-                    scope.scene.add(scope.mesh);
-                }
-    
-            }, this.onProgress, null);
-
-        }
-
-        this.mesh = this.meshes[0];
-
-    }
-
     show() {
 
         this.mesh = this.meshes[this.currentMesh];
@@ -202,15 +203,13 @@ export class ModelLoader {
 
     saveJson() {
 
-        // const fs = require('fs');
         this.model_data[this.currentMesh] = Object.assign({}, this.model_data[this.currentMesh], this.eye.getLocation());
         if (this.model_data)
         console.log('get line', this.model_data);
-        // let data = JSON.stringify(this.model_data);
-        // fs.writeFileSync('student-2.json', data);
+        
         var content = JSON.stringify(this.model_data);
         var blob = new Blob([content], {type: "text/plain"});
-        saveAs(blob, "save.json");
+        saveAs(blob, "Model_data.json");
 
     }
 
@@ -226,15 +225,13 @@ export class ModelLoader {
         const poses = gui.addFolder('Poses');
         const morphs = gui.addFolder('Morphs');
 
-
-
         function getBaseName(s) {
 
             return s.slice(s.lastIndexOf('/') + 1);
 
         }
 
-        function initControls() {
+        function initControls(scope) {
 
             for (const key in dictionary) {
 
@@ -262,25 +259,25 @@ export class ModelLoader {
 
         }
 
-        function initPoses() {
+        function initPoses(scope) {
 
             const files = { default: - 1 };
 
             for (let i = 0; i < vpdFiles.length; i++) {
-
+                console.log(vpdFiles[i]);
                 files[getBaseName(vpdFiles[i])] = i;
 
             }
-
-            poses.add(controls, 'pose', files).onChange(onChangePose);
-
+            
+            poses.add(controls, 'pose', files).onChange(() => onChangePose(scope));
+            console.log(poses);
         }
 
-        function initMorphs() {
+        function initMorphs(scope) {
 
             for (const key in dictionary) {
-
-                morphs.add(controls, key, 0.0, 1.0, 0.01).onChange(onChangeMorph);
+                
+                morphs.add(controls, key, 0.0, 1.0, 0.01).onChange(() => onChangeMorph(scope));
 
             }
 
@@ -299,25 +296,25 @@ export class ModelLoader {
         }
 
         function onChangePose(scope) {
-
+            console.log(scope);
             const index = parseInt(controls.pose);
 
             if (index === - 1) {
 
                 scope.mesh.pose();
-
+                
             } else {
 
                 scope.helper.pose(scope.mesh, scope.vpds[index]);
-
+                console.log(scope.mesh);
             }
 
         }
 
-        initControls();
+        initControls(this);
         initKeys();
-        initPoses();
-        initMorphs();
+        initPoses(this);
+        initMorphs(this);
 
         onChangeMorph(this);
         onChangePose(this);
