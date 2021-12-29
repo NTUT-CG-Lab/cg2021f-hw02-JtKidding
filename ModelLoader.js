@@ -202,15 +202,28 @@ export class ModelLoader {
     }
 
     saveJson() {
-
         this.model_data[this.currentMesh] = Object.assign({}, this.model_data[this.currentMesh], this.eye.getLocation());
         if (this.model_data)
-        console.log('get line', this.model_data);
+            console.log('get line', this.model_data);
         
         var content = JSON.stringify(this.model_data);
+        // const url = window.URL.createObjectURL(new Blob([content]));
+        // var input = document.createElement('a');
+        // input.href = url;
+        // input.setAttribute('download','save.json');
+        // document.body.appendChild(input);
+        // input.click();
         var blob = new Blob([content], {type: "text/plain"});
-        saveAs(blob, "Model_data.json");
-
+        // saveAs(blob, "Model_data.json");
+        var filename = 'model_data.json'; 
+        var a = document.createElement('a'); 
+        var url = URL.createObjectURL(blob); 
+        // a.setAttribute('href', url);
+        // a.setAttribute('download', filename);
+        a.href = url; 
+        a.download = filename; 
+        a.click(); 
+        // window.URL.revokeObjectURL(url);
     }
 
     initGui() {
